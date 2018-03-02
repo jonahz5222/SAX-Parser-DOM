@@ -19,7 +19,7 @@ public class Classroom extends Application {
     
     @Override
     public void start(Stage stage) throws Exception {
-        FXMLLoader loader = new FXMLLoader(getClass().getResource("ClassroomUI.fxml"));
+        FXMLLoader loader = new FXMLLoader(getClass().getResource("DOMUI.fxml"));
         Parent root = loader.load();
         
         Scene scene = new Scene(root);

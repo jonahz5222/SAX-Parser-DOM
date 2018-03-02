@@ -25,7 +25,7 @@ import javafx.stage.FileChooser;
  *
  * @author dale
  */
-public class ClassroomUIController implements Initializable {
+public class DOMUIController implements Initializable {
     
     @FXML
     private TextArea textArea;
@@ -42,18 +42,13 @@ public class ClassroomUIController implements Initializable {
         if (file != null) {
             try
             {
-                Course course = CourseXMLLoader.load(file);
-                ArrayList<Student> students = course.getStudents();
-                for (Student student : students) {
-                    textArea.appendText(Integer.toString(student.getId()) + "\n");
-                    textArea.appendText(student.getPawprint() + "\n");
-                    textArea.appendText(student.getFirstName() + "\n");
-                    textArea.appendText(student.getLastName() + "\n");
-                    textArea.appendText(Double.toString(student.getGrade()) + "\n");
-                    textArea.appendText("-------------------------\n");
-                }
+                InputtedDocument document = XMLLoader.load(file);
+                ArrayList<Element> elements = document.getElements();
                 
-                
+                for (Element element : elements) {
+                    outputElements(element);
+                }  
+  
             } catch (Exception ex) {
                 displayExceptionAlert("Exception parsing XML file.", ex);
             }
@@ -117,6 +112,33 @@ public class ClassroomUIController implements Initializable {
         alert.getDialogPane().setExpandableContent(expContent);
 
         alert.showAndWait();
+    }
+    
+    private void outputElements(Element element) {
+        textArea.appendText("Name:" + element.getName() + "; ");
+        if(element.getAttributes() != null /*&& element.getAttributes().getLength() != 0*/) {
+            
+        
+            textArea.appendText("   Attributes: ");
+            for(int i = 0; i < element.getAttributes().getLength(); i++) {
+                textArea.appendText("   " +element.getAttributes().getQName(i) + ": ");
+                textArea.appendText("   " + element.getAttributes().getValue(i) + ",");
+            }
+            textArea.appendText("\n");
+            
+            
+        }
+        
+        
+        if(!element.getContent().isEmpty()) {
+            textArea.appendText("Content: " + element.getContent());
+        }
+        textArea.appendText("\n");
+        
+        
+        for(Element child : element.getChildElements()) {
+            outputElements(child);
+        }
     }
     
 }

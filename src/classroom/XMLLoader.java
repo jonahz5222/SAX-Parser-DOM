@@ -6,6 +6,7 @@
 package classroom;
 
 import java.io.File;
+import java.util.Stack;
 import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
 import org.xml.sax.Attributes;
@@ -19,102 +20,43 @@ import org.xml.sax.helpers.DefaultHandler;
  * http://www.saxproject.org/apidoc/org/xml/sax/helpers/DefaultHandler.html
  * https://docs.oracle.com/javase/8/docs/api/org/xml/sax/SAXException.html#SAXException--
  */
-public class CourseXMLLoader {
+public class XMLLoader {
     
-    public static Course load(File xmlCourseFile) throws Exception {
-        Course course = new Course();
+    public static InputtedDocument load(File xmlCourseFile) throws Exception {
+        
+        InputtedDocument document = new InputtedDocument();
+        
         try {
             SAXParserFactory factory = SAXParserFactory.newInstance();
             SAXParser saxParser = factory.newSAXParser();
             
             DefaultHandler handler = new DefaultHandler() {
-                Student student = null;
-                boolean pawprintFlag = false;
-                boolean firstNameFlag = false;
-                boolean lastNameFlag = false;
-                boolean gradeFlag = false;
+                
+                private Stack<Element> stack = new Stack<>();
                 
                 @Override
                 public void startElement(String uri, String localName, String qName, Attributes attributes) throws SAXException {
                     
-                    if (qName.equalsIgnoreCase("student")) {
-                        student = new Student();
-                        String idString = attributes.getValue("id");
-                        if (idString != null) {
-                            int id = 0;
-                            try {
-                                id = Integer.parseInt(idString);
-                            } catch (NumberFormatException e) {
-                                throw new SAXException("student id in xml could not be converted to an int");
-                            }
-                            student.setId(id);
-                        }
-                        
-                    }
-                    if (qName.equalsIgnoreCase("pawprint")) {
-                        pawprintFlag = true;
-                    }
-                    if (qName.equalsIgnoreCase("firstname")) {
-                        firstNameFlag = true;
-                    }
-                    if (qName.equalsIgnoreCase("lastname")) {
-                        lastNameFlag = true;
-                    }
-                    if (qName.equalsIgnoreCase("grade")) {
-                        gradeFlag = true;
+                    Element element = new Element();
+                    element.setName(qName);
+                    
+                    if(stack.isEmpty()){
+                        stack.push(element);
+                        document.addElement(element);
+                    }else {
+                        stack.peek().addChildElement(element);
+                        stack.push(element);
                     }
                 }
                 
                 @Override
                 public void endElement(String uri, String localName, String qName) throws SAXException {
-                    if (qName.equalsIgnoreCase("student")) {
-                        course.addStudent(student);
-                        student = null;
-                    }
-                    if (qName.equalsIgnoreCase("pawprint")) {
-                        pawprintFlag = false;
-                    }
-                    if (qName.equalsIgnoreCase("firstname")) {
-                        firstNameFlag = false;
-                    }
-                    if (qName.equalsIgnoreCase("lastname")) {
-                        lastNameFlag = false;
-                    }
-                    if (qName.equalsIgnoreCase("grade")) {
-                        gradeFlag = false;
-                    }
+                    stack.pop();
                 }
                 
                 @Override
                 public void characters(char ch[], int start, int length) throws SAXException {
-                    if (pawprintFlag) {
-                        if (student != null) {
-                            student.setPawprint(new String(ch, start, length));
-                        }
-                    }
-                    if (firstNameFlag) {
-                        if (student != null) {
-                            student.setFirstName(new String(ch, start, length));
-                        }
-                    }
-                    if (lastNameFlag) {
-                        if (student != null) {
-                            student.setLastName(new String(ch, start, length));
-                        }
-                    }
-                    if (gradeFlag) {
-                        if (student != null) {
-                            String gradeString = new String(ch, start, length);
-                            double grade = 0.0;
-                            try {
-                                grade = Double.parseDouble(gradeString);
-                            } catch (NumberFormatException e) {
-                                throw new SAXException("grade in xml could not be converted to a double");
-                            }
-                            
-                            student.setGrade(grade);
-                        }
-                    }                    
+                    stack.peek().setContent(new String(ch, start, length).trim());  
                 }
             };
             
@@ -124,6 +66,6 @@ public class CourseXMLLoader {
             throw e;
         }
         
-      return course; 
+      return document; 
     }
 }
